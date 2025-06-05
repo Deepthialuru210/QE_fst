@@ -2,34 +2,43 @@ import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.firefox.FirefoxDriver;
+import org.testng.Assert;
+import org.testng.annotations.AfterClass;
+import org.testng.annotations.BeforeClass;
+import org.testng.annotations.Test;
+
 public class Activity3 {
+    WebDriver driver;
 
-	public static void main(String[] args) {
-		// TODO Auto-generated method stub
-		WebDriver driver = new FirefoxDriver();
-		
-		 driver.get("https://training-support.net/webelements/target-practice");
-		 
-		  String title = driver.getTitle();
-	      System.out.println("Page title: " + title);
-	      
-	       WebElement thirdHeader = driver.findElement(By.xpath("(//h3)"));
-	       System.out.println("Third header text: " + thirdHeader.getText());
+    @BeforeClass
+    public void beforeClass() {
+        driver = new FirefoxDriver();
 
-	        // 4. Find the 5th header and print its color
-	        WebElement fifthHeader = driver.findElement(By.xpath("(//h5)"));
-	        String color = fifthHeader.getCssValue("color");
-	        System.out.println("Fifth header color: " + color);
+        // Open browser
+        driver.get("https://training-support.net/webelements/login-form");
+    }
 
-	        WebElement purpleButton = driver.findElement(By.xpath("//button[contains(@class, 'purple')]"));
-	        String purpleClasses = purpleButton.getDomAttribute("class"); // getAttribute is usually more reliable
-	        System.out.println("Purple Button Classes: " + purpleClasses);
+    @Test
+    public void loginTest() {
+        // Find the username and password fields
+        WebElement username = driver.findElement(By.id("username"));
+        WebElement password = driver.findElement(By.id("password"));
 
-	        WebElement slateButton = driver.findElement(By.xpath("//button[text()='Slate']"));
-	        String slateText = slateButton.getText();
-	        System.out.println("Slate Button Text: " + slateText);
+        // Enter credentials
+        username.sendKeys("admin");
+        password.sendKeys("password");
 
-	        driver.quit();
-	}
+        // Click login
+        driver.findElement(By.xpath("//button[text()='Submit']")).click();
 
+        // Read login message
+        String loginMessage = driver.findElement(By.cssSelector("h2.text-center")).getText();
+        Assert.assertEquals("Welcome Back, Admin!", loginMessage);
+    }
+
+    @AfterClass
+    public void afterClass() {
+        // Close browser
+        driver.close();
+    }
 }

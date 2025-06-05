@@ -1,21 +1,28 @@
-import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.firefox.FirefoxDriver;
+import org.testng.annotations.BeforeClass;
+import org.testng.annotations.AfterClass;
+import org.testng.annotations.Test;
 
 public class Activity1 {
-  public static void main(String[] args) {
-    // Create a new instance of the Firefox driver
-    WebDriver driver = new FirefoxDriver();
-    
-    // Open the browser
-    driver.get("https://training-support.net");
+    WebDriver driver;
 
-    // Perform testing and assertions
-   System.out.println(driver.getTitle());
-   
-   driver.findElement(By.linkText("About Us")).click();
-   System.out.println("New Page Title: " + driver.getTitle());
-    
-    driver.quit();
-  }
+    @BeforeClass
+    public void setUp() {
+        driver = new FirefoxDriver();
+        
+    }
+
+    @Test
+    public void OpenTS() {
+    	driver.get("https://training-support.net");
+        String title = driver.getTitle();
+        System.out.println("Page title is: " + title);
+        
+    }
+
+    @AfterClass
+    public void Close() {
+     driver.close();
+    }
 }
