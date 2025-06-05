@@ -1,50 +1,107 @@
+package suiteExample;
+
+import static org.testng.Assert.assertEquals;
+import java.io.FileInputStream;
+import java.time.Duration;
+import java.util.ArrayList;
+import java.util.List;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.xssf.usermodel.XSSFSheet;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.firefox.FirefoxDriver;
-import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
-
-import java.time.Duration;
+import org.testng.annotations.AfterClass;
+import org.testng.annotations.BeforeClass;
+import org.testng.annotations.DataProvider;
+import org.testng.annotations.Test;
 
 public class Activity10 {
-    public static void main(String[] args) {
-        // Start Firefox driver
-        WebDriver driver = new FirefoxDriver();
+    WebDriver driver;
+    WebDriverWait wait;
 
-        // Open the test page
-        driver.get("https://training-support.net/webelements/dynamic-controls");
+    @BeforeClass
+    public void beforeClass() {
+        driver = new FirefoxDriver();
+        wait = new WebDriverWait(driver, Duration.ofSeconds(10));
 
-        // Print the page title
-        System.out.println("Page title: " + driver.getTitle());
+        // Open browser
+        driver.get("https://training-support.net/webelements/simple-form");
+    }
 
-        // Set up explicit wait
-        WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
+    public static List<List<String>> readExcel(String filePath) {
+        List<List<String>> data = new ArrayList<List<String>>();
+        try {
+            FileInputStream file = new FileInputStream(filePath);
 
-        // Find the Toggle Checkbox button
-        WebElement toggleButton = driver.findElement(By.xpath("//button[text()='Toggle Checkbox']"));
+            // Create Workbook instance holding reference to Excel file
+            XSSFWorkbook workbook = new XSSFWorkbook(file);
 
-        // First click: Remove the checkbox
-        toggleButton.click();
-        System.out.println("Clicked to remove checkbox.");
+            // Get first sheet from the workbook
+            XSSFSheet sheet = workbook.getSheetAt(0);
 
-        // ✅ WAIT for the checkbox to DISAPPEAR
-        wait.until(ExpectedConditions.invisibilityOfElementLocated(By.xpath("//input[@type='checkbox']")));
-        System.out.println("Checkbox is now gone.");
+            // Iterate through each rows one by one
+            for (Row cells : sheet) {
+                // Temp variable
+                List<String> rowData = new ArrayList<String>();
+                for (Cell cell : cells) {
+                    // Store row data
+                    rowData.add(cell.getStringCellValue());
+                }
+                // Store row data in List
+                data.add(rowData);
+            }
+            file.close();
+            workbook.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return data;
+    }
 
-        // Second click: Add the checkbox back
-        toggleButton.click();
-        System.out.println("Clicked to add checkbox back.");
+    @DataProvider(name = "Events")
+    public static Object[][] signUpInfo() {
+        String filePath = "C:\\Users\\AluruDeepthi\\OneDrive - IBM\\Documents\\empData.xlsx";
+        List<List<String>> data = readExcel(filePath);
+        return new Object[][] { 
+            { data.get(1) },
+            { data.get(2) },
+            { data.get(3) }
+        };
+    }
 
-        // ✅ WAIT for the checkbox to APPEAR again
-        WebElement checkbox = wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath("//input[@type='checkbox']")));
-        System.out.println("Checkbox is now visible.");
+    @Test(dataProvider = "Events")
+    public void registerTest(List<String> rows) throws InterruptedException {
+        // Find the input fields and enter text
+        WebElement fullName = driver.findElement(By.id("full-name"));
+        fullName.sendKeys(rows.get(0));
 
-        // ✅ SELECT the checkbox
-        checkbox.click();
-        System.out.println("Checkbox is selected: " + checkbox.isSelected());
+        // Enter the email
+        driver.findElement(By.id("email")).sendKeys(rows.get(1));
 
-        // Close browser
+        // Enter the Date of the event
+        driver.findElement(By.name("event-date")).sendKeys(rows.get(2).replaceAll("\"", ""));
+
+        // Enter additional details
+        driver.findElement(By.id("additional-details")).sendKeys(rows.get(3));
+
+        // Click Submit
+        driver.findElement(By.xpath("//button[text()='Submit']")).click();
+        
+        // Confirm booking
+        String message = driver.findElement(By.id("action-confirmation")).getText();
+        assertEquals(message, "Your event has been scheduled!");
+
+        // Refresh the page
+        driver.navigate().refresh();
+    }
+
+    @AfterClass
+    public void tearDown() {
+        // Close the browser
         driver.quit();
     }
 }
